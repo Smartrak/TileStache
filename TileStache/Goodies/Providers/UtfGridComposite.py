@@ -54,7 +54,7 @@ class Provider:
 		
 		for l in self.stack:
 			self.addLayer(resultGrid, gridKeys, gridData, l, coord)
-		return SaveableResponse(self.writeResult(resultGrid, gridKeys, gridData))
+		return SaveableResponse(self.writeResult(resultGrid, gridKeys, gridData).encode('utf8'))
 
 	def getTypeByExtension(self, extension):
 		""" Get mime-type and format by file extension.
