@@ -149,7 +149,7 @@ from wsgiref.headers import Headers
 from io import BytesIO
 
 from .py3_compat import urljoin
-
+from urllib.request import urlopen
 from time import time
 
 from .Pixels import load_palette, apply_palette, apply_palette256
@@ -380,7 +380,6 @@ class Layer:
         body = None
 
         cache = self.config.cache
-
         if not ignore_cached:
             # Start by checking for a tile in the cache.
             try:

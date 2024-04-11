@@ -34,13 +34,9 @@ import json
 from os.path import exists
 from TileStache.Core import KnownUnknown
 from TileStache.Geography import getProjectionByName
-try:
-    from urllib.parse import urljoin, urlparse
-except ImportError:
-    # Python 2
-    from urlparse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 from tempfile import mkstemp
-from urllib import urlopen
+from urllib.request import urlopen
 import os
 
 try:
@@ -58,12 +54,12 @@ class Provider:
 
         maphref = urljoin(layer.config.dirpath, mapfile)
         scheme, h, path, q, p, f = urlparse(maphref)
-        
+
         if scheme in ('file', ''):
             self.mapfile = path
         else:
             self.mapfile = maphref
-        
+
         self.layer_index = layer_index
         self.wrapper = wrapper
         self.scale = scale
@@ -100,10 +96,11 @@ class Provider:
         # then encode the grid array as utf, resample to 1/scale the size, and dump features
         grid_utf = grid_view.encode('utf', resolution=self.scale, add_features=True)
 
+        # these variables need to be strings with encodings otherwise they can't be turned into byte streams when sent out
         if self.wrapper is None:
-            return SaveableResponse(json.dumps(grid_utf))
+            return SaveableResponse((json.dumps(grid_utf)).encode('utf8'))
         else:
-            return SaveableResponse(self.wrapper + '(' + json.dumps(grid_utf) + ')')
+            return SaveableResponse((self.wrapper + '(' + json.dumps(grid_utf) + ')').encode('utf8'))
 
     def getTypeByExtension(self, extension):
         """ Get mime-type and format by file extension.

@@ -19,8 +19,10 @@ from sys import stdout
 from io import StringIO
 from os.path import dirname, join as pathjoin, realpath
 from datetime import datetime, timedelta
+from html import escape
 
-from .py3_compat import urljoin, urlparse, urlopen, parse_qs, httplib, is_string_type, reduce
+from .py3_compat import urljoin, urlparse, urlopen, parse_qs, is_string_type, reduce
+import http.client
 
 from wsgiref.headers import Headers
 from os import getcwd
@@ -224,7 +226,6 @@ def requestHandler2(config_hint, path_info, query_string=None, script_name=''):
         Calls Layer.getTileResponse() to render actual tiles, and getPreview() to render preview.html.
     """
     headers = Headers([])
-
     try:
         # ensure that path_info is at least a single "/"
         path_info = '/' + (path_info or '').lstrip('/')
@@ -270,7 +271,8 @@ def requestHandler2(config_hint, path_info, query_string=None, script_name=''):
 
         if callback and 'json' in headers['Content-Type']:
             headers['Content-Type'] = 'application/javascript; charset=utf-8'
-            content = '%s(%s)' % (callback, content)
+            #Need to make sure all these values end up being a binary string otherwise sending to the client finds a str instead of a binary type
+            content = callback.encode('utf8') + b'(' + content + b')'
 
         if layer.max_cache_age is not None:
             expires = datetime.utcnow() + timedelta(seconds=layer.max_cache_age)
@@ -391,7 +393,6 @@ class WSGITileServer:
         script_name = environ.get('SCRIPT_NAME', None)
 
         status_code, headers, content = requestHandler2(self.config, path_info, query_string, script_name)
-
         return self._response(start_response, status_code, bytes(content), headers)
 
     def _response(self, start_response, code, content='', headers=None):
@@ -402,7 +403,7 @@ class WSGITileServer:
         if content:
             headers.setdefault('Content-Length', str(len(content)))
 
-        start_response('%d %s' % (code, httplib.responses[code]), headers.items())
+        start_response('%d %s' % (code, http.client.responses[code]), headers.items())
         return [content]
 
 def modpythonHandler(request):

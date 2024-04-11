@@ -185,8 +185,8 @@ except ImportError:
 
 from TileStache.Core import KnownUnknown
 
-# only need to check for py3 once
-from TileStache import unicode
+from inspect import getmembers
+unicode = str
 
 class Provider:
     """ Provides a Photoshop-like rendering pipeline, making it possible to use
@@ -250,7 +250,7 @@ def build_stack(obj):
         Normally, this is applied to the "stack" parameter to Composite.Provider.
     """
     if type(obj) is list:
-        layers = map(build_stack, obj)
+        layers = list(map(build_stack, obj))
         return Stack(layers)
 
     elif type(obj) is dict:
